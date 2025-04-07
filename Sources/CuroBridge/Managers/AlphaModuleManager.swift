@@ -7,13 +7,13 @@
 
 import Foundation
 
-enum ModuleError: Error {
+public enum ModuleError: Error {
     case temperatureReadingError
     case oximeterReadingError
 }
 
 extension ModuleError: LocalizedError {
-    var errorDescription: String? {
+    public var errorDescription: String? {
         switch self {
         case .temperatureReadingError:
             return "Encountered an error while reading the temperature"
@@ -23,10 +23,10 @@ extension ModuleError: LocalizedError {
     }
 }
 
-class AlphaModuleManager {
-    var onTemperatureReading: ((Double, Double) -> Void)?
-    var onOximetry: ((Int, Int) -> Void)?
-    var onError: ((ModuleError) -> Void)?
+public class AlphaModuleManager {
+    public var onTemperatureReading: ((Double, Double) -> Void)?
+    public var onOximetry: ((Int, Int) -> Void)?
+    public var onError: ((ModuleError) -> Void)?
     
     func processPayload(_ payload: Data) {
         let payloadStr = String(decoding: payload, as: UTF8.self)

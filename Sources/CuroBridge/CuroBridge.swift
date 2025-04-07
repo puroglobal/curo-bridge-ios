@@ -2,13 +2,17 @@ import Foundation
 import CoreBluetooth
 
 public struct CuroBridge {
-    let deviceDiscovery = DeviceDiscovery()
+    public let deviceDiscovery: DeviceDiscovery
+    public let alphaStatusManager: AlphaStatusManager
+    public let alphaModuleManager: AlphaModuleManager
     
-    let alphaStatusManager = AlphaStatusManager()
-    let alphaModuleManager = AlphaModuleManager()
-    
-    init() {
+    public init() {
+        self.deviceDiscovery = DeviceDiscovery()
+        self.alphaStatusManager = AlphaStatusManager()
+        self.alphaModuleManager = AlphaModuleManager()
+        
         deviceDiscovery.setAlphaStatusManager(alphaStatusManager)
         deviceDiscovery.setAlphaModuleManager(alphaModuleManager)
     }
 }
+

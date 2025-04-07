@@ -7,10 +7,10 @@
 
 import Foundation
 
-class AlphaStatusManager {
-    var onDeviceStatus: ((Int) -> Void)?
-    var onCameraIdReceived: ((String) -> Void)?
-    var onIpReceived: ((String) -> Void)?
+public class AlphaStatusManager {
+    public var onDeviceStatus: ((Int) -> Void)?
+    public var onCameraIdReceived: ((String) -> Void)?
+    public var onIpReceived: ((String) -> Void)?
     
     func processPayload(_ payload: Data) {
         let statusStr = String(decoding: payload, as: UTF8.self)

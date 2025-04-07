@@ -8,10 +8,10 @@
 import Foundation
 import CoreBluetooth
 
-class DeviceDiscovery: NSObject {
-    var updateOtoscopeEspId: ((String) -> Void)?
+public class DeviceDiscovery: NSObject {
+    public var updateOtoscopeEspId: ((String) -> Void)?
     
-    private var centralManager: CBCentralManager?
+    var centralManager: CBCentralManager?
     
     var allPeripherals: [CBPeripheral] = []
     
@@ -53,7 +53,7 @@ extension DeviceDiscovery {
 }
 
 extension DeviceDiscovery: CBCentralManagerDelegate {
-    func centralManagerDidUpdateState(_ central: CBCentralManager) {
+    public func centralManagerDidUpdateState(_ central: CBCentralManager) {
         switch central.state {
         case .poweredOn:
             self.centralManager?.scanForPeripherals(withServices: CuroUUIDs.curoServices)
@@ -62,20 +62,20 @@ extension DeviceDiscovery: CBCentralManagerDelegate {
         }
     }
     
-    func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
-        if !allPeripherals.contains(peripheral) {
+    public func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
+        if !allPeripherals.contains(where: { $0.identifier == peripheral.identifier }) {
             self.allPeripherals.append(peripheral)
         }
     }
     
-    func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
+    public func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
         peripheral.delegate = self
         peripheral.discoverServices(CuroUUIDs.curoServices)
     }
 }
 
 extension DeviceDiscovery: CBPeripheralDelegate {
-    func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: (any Error)?) {
+    public func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: (any Error)?) {
         if let error = error {
             print("Error discovering services: \(error)")
             return
@@ -91,7 +91,7 @@ extension DeviceDiscovery: CBPeripheralDelegate {
         }
     }
     
-    func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: (any Error)?) {
+    public func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: (any Error)?) {
         if let error = error {
             print("Error discovering characteristics: \(error)")
             return
@@ -102,7 +102,7 @@ extension DeviceDiscovery: CBPeripheralDelegate {
         }
     }
     
-    func checkCharacteristics(_ characteristic: CBCharacteristic) {
+    public func checkCharacteristics(_ characteristic: CBCharacteristic) {
         switch characteristic.uuid {
         case CuroUUIDs.alphaStatusCharacteristic:
             self.alphaStatusCharacteristic = characteristic
@@ -117,14 +117,14 @@ extension DeviceDiscovery: CBPeripheralDelegate {
 }
 
 extension DeviceDiscovery {
-    func peripheral(_ peripheral: CBPeripheral, didWriteValueFor characteristic: CBCharacteristic, error: (any Error)?) {
+    public func peripheral(_ peripheral: CBPeripheral, didWriteValueFor characteristic: CBCharacteristic, error: (any Error)?) {
         if let error = error {
             print("Error writing to characteristics: \(error)")
             return
         }
     }
     
-    func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: (any Error)?) {
+    public func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: (any Error)?) {
         if let error = error {
             print("Error reading value for characteristics: \(error)")
             return
@@ -134,7 +134,7 @@ extension DeviceDiscovery {
             switch characteristic {
             case CuroUUIDs.alphaStatusCharacteristic:
                 alphaStatusManager?.processPayload(value)
-            case CuroUUIDs.alphaStatusCharacteristic:
+            case CuroUUIDs.alphaModuleCharacteristic:
                 alphaModuleManager?.processPayload(value)
             default:
                 print("Unhandled characteristics: \(characteristic.uuid.uuidString)")
