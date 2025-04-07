@@ -9,6 +9,7 @@ import Foundation
 import CoreBluetooth
 
 public class DeviceDiscovery: NSObject {
+    public var onPeripheralListUpdated: (([CBPeripheral]) -> Void)?
     public var updateOtoscopeEspId: ((String) -> Void)?
     
     var centralManager: CBCentralManager?
@@ -56,11 +57,11 @@ public class DeviceDiscovery: NSObject {
 }
 
 extension DeviceDiscovery {
-    public func setAlphaStatusManager(_ manager: AlphaStatusManager) {
+    func setAlphaStatusManager(_ manager: AlphaStatusManager) {
         self.alphaStatusManager = manager
     }
     
-    public func setAlphaModuleManager(_ manager: AlphaModuleManager) {
+    func setAlphaModuleManager(_ manager: AlphaModuleManager) {
         self.alphaModuleManager = manager
     }
 }
@@ -78,6 +79,7 @@ extension DeviceDiscovery: CBCentralManagerDelegate {
     public func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
         if !allPeripherals.contains(where: { $0.identifier == peripheral.identifier }) {
             self.allPeripherals.append(peripheral)
+            self.onPeripheralListUpdated?(self.allPeripherals)
         }
     }
     
