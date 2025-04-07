@@ -40,3 +40,8 @@ enum CuroUUIDs {
         [alphaService, stethoscopeService]
     }
 }
+
+public enum CuroDevice {
+    case alpha
+    case stethoscope
+}

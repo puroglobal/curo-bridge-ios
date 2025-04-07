@@ -13,6 +13,7 @@ public class DeviceDiscovery: NSObject {
     
     var centralManager: CBCentralManager?
     
+    var servicesToScan = [CBUUID]()
     var allPeripherals: [CBPeripheral] = []
     
     var alphaDevice: CBPeripheral?
@@ -25,29 +26,41 @@ public class DeviceDiscovery: NSObject {
     var alphaStatusManager: AlphaStatusManager?
     var alphaModuleManager: AlphaModuleManager?
     
-    func startDeviceDiscovery() {
+    public func startDeviceDiscovery(_ devices: [CuroDevice]?) {
+        let deviceTypes = devices ?? [CuroDevice.alpha, CuroDevice.stethoscope]
+        servicesToScan.removeAll()
+        if deviceTypes.contains(where: { deviceType in
+            deviceType == .alpha
+        }) {
+            servicesToScan.append(CuroUUIDs.alphaService)
+        }
+        if deviceTypes.contains(where: { deviceType in
+            deviceType == .stethoscope
+        }) {
+            servicesToScan.append(CuroUUIDs.stethoscopeService)
+        }
         self.centralManager = CBCentralManager(delegate: self, queue: .main)
     }
     
-    func connectDevice(_ peripheral: CBPeripheral) {
+    public func connectDevice(_ peripheral: CBPeripheral) {
         self.centralManager?.connect(peripheral)
     }
     
-    func disconnectDevice(_ peripheral: CBPeripheral) {
+    public func disconnectDevice(_ peripheral: CBPeripheral) {
         self.centralManager?.cancelPeripheralConnection(peripheral)
     }
     
-    func clearDeviceList() {
+    public func clearDeviceList() {
         allPeripherals.removeAll()
     }
 }
 
 extension DeviceDiscovery {
-    func setAlphaStatusManager(_ manager: AlphaStatusManager) {
+    public func setAlphaStatusManager(_ manager: AlphaStatusManager) {
         self.alphaStatusManager = manager
     }
     
-    func setAlphaModuleManager(_ manager: AlphaModuleManager) {
+    public func setAlphaModuleManager(_ manager: AlphaModuleManager) {
         self.alphaModuleManager = manager
     }
 }
@@ -56,7 +69,7 @@ extension DeviceDiscovery: CBCentralManagerDelegate {
     public func centralManagerDidUpdateState(_ central: CBCentralManager) {
         switch central.state {
         case .poweredOn:
-            self.centralManager?.scanForPeripherals(withServices: CuroUUIDs.curoServices)
+            self.centralManager?.scanForPeripherals(withServices: servicesToScan)
         default:
             print("Unhandled state: ", central.state)
         }
@@ -70,7 +83,7 @@ extension DeviceDiscovery: CBCentralManagerDelegate {
     
     public func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
         peripheral.delegate = self
-        peripheral.discoverServices(CuroUUIDs.curoServices)
+        peripheral.discoverServices(servicesToScan)
     }
 }
 
@@ -88,6 +101,7 @@ extension DeviceDiscovery: CBPeripheralDelegate {
             } else if service == CuroUUIDs.stethoscopeService {
                 stethoscopeDevice = peripheral
             }
+            peripheral.discoverCharacteristics(nil, for: service)
         }
     }
     
@@ -131,6 +145,7 @@ extension DeviceDiscovery {
         }
         
         if let value = characteristic.value {
+            print("Characteristic \(characteristic.uuid.uuidString) value: \(String(decoding: value, as: UTF8.self))")
             switch characteristic {
             case CuroUUIDs.alphaStatusCharacteristic:
                 alphaStatusManager?.processPayload(value)
@@ -147,6 +162,24 @@ extension DeviceDiscovery {
     func enableNotifyForCharacteristic(peripheral: CBPeripheral?, characteristic: CBCharacteristic?) {
         if let peripheral = peripheral, let characteristic = characteristic {
             peripheral.setNotifyValue(true, for: characteristic)
+        }
+    }
+    
+    public func writeToModuleCharacteristics(_ data: Data) {
+        if let alphaModuleCharacteristic = self.alphaModuleCharacteristic {
+            writeToAlpha(data: data, characteristic: alphaModuleCharacteristic)
+        }
+    }
+    
+    public func writeToStatusCharacteristics(_ data: Data) {
+        if let alphaStatusCharacteristic = self.alphaStatusCharacteristic {
+            writeToAlpha(data: data, characteristic: alphaStatusCharacteristic)
+        }
+    }
+    
+    private func writeToAlpha(data: Data, characteristic: CBCharacteristic) {
+        if let alphaDevice = self.alphaDevice {
+            alphaDevice.writeValue(data, for: characteristic, type: .withResponse)
         }
     }
 }
