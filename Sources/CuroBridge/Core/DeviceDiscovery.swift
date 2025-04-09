@@ -84,6 +84,7 @@ extension DeviceDiscovery: CBCentralManagerDelegate {
     }
     
     public func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
+        print("Connected to device: \(peripheral.name ?? "Unknown device")")
         peripheral.delegate = self
         peripheral.discoverServices(servicesToScan)
     }
@@ -119,6 +120,7 @@ extension DeviceDiscovery: CBPeripheralDelegate {
     }
     
     public func checkCharacteristics(_ characteristic: CBCharacteristic) {
+        print("Found characteristic: \(characteristic.uuid.uuidString)")
         switch characteristic.uuid {
         case CuroUUIDs.alphaStatusCharacteristic:
             self.alphaStatusCharacteristic = characteristic
@@ -162,6 +164,7 @@ extension DeviceDiscovery {
 
 extension DeviceDiscovery {
     func enableNotifyForCharacteristic(peripheral: CBPeripheral?, characteristic: CBCharacteristic?) {
+        print("enableNotifyForCharacteristic: \(characteristic?.uuid.uuidString ?? "N/A")")
         if let peripheral = peripheral, let characteristic = characteristic {
             peripheral.setNotifyValue(true, for: characteristic)
         }
@@ -180,6 +183,7 @@ extension DeviceDiscovery {
     }
     
     private func writeToAlpha(data: Data, characteristic: CBCharacteristic) {
+        print("Writing to ALPHA: \(characteristic.uuid.uuidString)")
         if let alphaDevice = self.alphaDevice {
             alphaDevice.writeValue(data, for: characteristic, type: .withResponse)
         }
